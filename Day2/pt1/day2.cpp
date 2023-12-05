@@ -6,13 +6,17 @@
 
 using namespace std;
 
+int MAX_RED = 12;
+int MAX_GREEN = 13;
+int MAX_BLUE = 14;
+
 int stringToIndex(string& indexStr) {
 	char ASCII_OFFSET = '0';
 	int numDigits = indexStr.length();
 	int result = 0;
 	int place = 1;
-	for (int i = 0; i < numDigits; ++i) {
-		char digitChar = indexStr[i];
+	for (auto itr = indexStr.rbegin(); itr < indexStr.rend(); ++itr) {
+		char digitChar = *itr;
 		int digit = digitChar - ASCII_OFFSET;
 		result += (digit * place);
 		place *= 10;
@@ -21,6 +25,27 @@ int stringToIndex(string& indexStr) {
 	return result;
 }
 
+// process whether this number of cubes is valid
+bool processCubes(string& nextOfLine) {
+	// running max of RGB cubes
+	
+	// split by draw: deliminate by ';'
+	// -> string draw
+	
+	// split draw into colors: deliminate by ','
+	// -> string colors
+	
+	// pointer to int for max
+	// switch color to decide which max to point to
+	// check max
+	
+	// end of line: for each color, if max > spec max, return false
+	// (outside loop) return true
+	
+	return false;
+}
+
+// read thorugh input, process lines, get solution
 void readLines(string fileName) {
 	ifstream input(fileName);	// input file
 	
@@ -42,6 +67,11 @@ void readLines(string fileName) {
 			
 			// get game index
 			int gameIndex = stringToIndex(nextWord);
+			
+			string restOfLine;
+			getline(iss, restOfLine);
+
+			cout << processCubes(nextOfLine) << endl;
 			
 		}
 	}
