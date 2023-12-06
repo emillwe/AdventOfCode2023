@@ -14,6 +14,11 @@ void readLines(string& fileName) {
 	string line;
 	vector<string> grid;
 	
+	// TODO: rather than scan for symbols and then
+	// find adjacent nums; try scanning for nums,
+	// then finding any adjacent symbols. If symbol,
+	// convert string num to int and add to runningSum
+	
 	set<pair<int, int>> coords;	// coordinates of symbols
 	int j = 0;	// row index
 	while (!ifs.eof()) {
@@ -41,7 +46,6 @@ void readLines(string& fileName) {
 		cout << p.first << ", " << p.second << endl;
 	}
 }
-
 
 
 int main(int argc, char *argv[]) {
