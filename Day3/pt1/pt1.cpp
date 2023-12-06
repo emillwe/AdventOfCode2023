@@ -2,7 +2,6 @@
 #include <fstream>
 #include <vector>
 #include <set>
-#include <pair>
 
 using namespace std;
 
@@ -13,14 +12,33 @@ void readLines(string& fileName) {
 	}
 	
 	string line;
+	vector<string> grid;
 	
-	set<pair<int, int>> coords;
-	
+	set<pair<int, int>> coords;	// coordinates of symbols
+	int j = 0;	// row index
 	while (!ifs.eof()) {
-		getline(ifs, line);
-		cout << line << endl;
+		getline(ifs, line);		// read line
+		grid.push_back(line);	// add line to grid
 		
+		// save all symbol coordinates
+		for (int i = 0; i < line.length(); ++i) {
+			char c = line[i];
+			if (!isalnum(c) && c != '.') {
+				pair<int, int> p(j, i);
+				coords.insert(p);
+			}
+		}
 		
+		++j; // next row
+	}
+	for (string str : grid) {
+		cout << str << endl;
+	}
+	
+	cout << endl;
+	for (auto itr = coords.begin(); itr != coords.end(); ++itr) {
+		pair<int, int> p = *itr;
+		cout << p.first << ", " << p.second << endl;
 	}
 }
 
