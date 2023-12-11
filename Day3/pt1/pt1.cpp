@@ -5,8 +5,8 @@
 
 using namespace std;
 
-// given the coordinate of a symbol and the input grid, check if symbol
-// is adjacent (including diagonals) to a digit
+// given the coordinates (p) of a symbol and the set digit coordinates(numCoords),
+// return whether p is adjacent (including diagonals) to a digit
 bool hasDigitNeighbor(pair<int, int>& p, set< pair<int, int> >& numCoords) {
 	pair<int, int> n(p.first - 1, p.second);
 	bool hasN = numCoords.count(n);
