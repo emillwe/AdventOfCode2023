@@ -2,65 +2,117 @@
 #include <fstream>
 #include <vector>
 #include <set>
+#include <cmath>
 
 using namespace std;
 
+const int ASCII_OFFSET = '0';		// for ASCII to int conversions
+
 // given the coordinates (p) of a symbol and the set digit coordinates(numCoords),
-// return whether p is adjacent (including diagonals) to a digit
-bool hasDigitNeighbor(pair<int, int>& p, set< pair<int, int> >& numCoords) {
+// return coordinates of all adjacent digits
+vector< pair<int, int> > getDigitNeighbors(pair<int, int>& p, set< pair<int, int> >& numCoords) {
+	vector< pair<int, int> > result;
+	
 	pair<int, int> n(p.first - 1, p.second);
 	bool hasN = numCoords.count(n);
 	if (hasN) {
-		return true;
+		result.push_back(n);
 	}
 	
 	pair<int, int> ne(p.first - 1, p.second + 1);
 	bool hasNE = numCoords.count(ne);
 	if (hasNE) {
-		return true;
+		result.push_back(ne);
 	}
 	
 	pair<int, int> e(p.first, p.second + 1);
 	bool hasE = numCoords.count(e);
 	if (hasE) {
-		return true;
+		result.push_back(e);
 	}
 	
 	pair<int, int> se(p.first + 1, p.second + 1);
 	bool hasSE = numCoords.count(se);
 	if (hasSE) {
-		return true;
+		result.push_back(se);
 	}
 	
 	pair<int, int> s(p.first + 1, p.second);
 	bool hasS = numCoords.count(s);
 	if (hasS) {
-		return true;
+		result.push_back(s);
 	}
 	
 	pair<int, int> sw(p.first + 1, p.second - 1);
 	bool hasSW = numCoords.count(sw);
 	if (hasSW) {
-		return true;
+		result.push_back(sw);
 	}
 	
 	pair<int, int> w(p.first, p.second - 1);
 	bool hasW = numCoords.count(w);
 	if (hasW) {
-		return true;
+		result.push_back(w);
 	}
 	
 	pair<int, int> nw(p.first - 1, p.second - 1);
 	bool hasNW = numCoords.count(nw);
 	if (hasNW) {
-		return true;
+		result.push_back(nw);
 	}
 	
-	// no digit neighbors found
-	return false;
+	// return coordinates of all adjacent digits
+	return result;
 }
 
-void readLines(string& fileName) {
+// given a coordinate (p) of a digit and the input grid, return the number that includes
+// this digit as a string, noting coordinates of visited digits along the way
+string getNum(pair<int, int>& p, vector<string>& grid, set< pair<int, int> >& visited) {
+	int row = p.first;
+	string& str = grid[row];
+	int i = p.second;	// location of digit inside line
+	string result = "";
+	
+	// have we processed this coordinate already?
+	if (visited.count(p)) {
+		return result;
+	}
+	
+	// find leftmost digit in this number
+	while(i >= 0 && isdigit(str[i])) {
+		--i;
+	}
+	// past end of number: back up
+	++i;
+	
+	while(isdigit(str[i])) {
+		visited.insert({p.first, i});
+		result += str[i];
+		++i;
+	}
+
+	return result;
+	
+}
+
+// convert string of digits to an int
+int strToInt(string& str) {
+	if (str.empty()) {
+		return 0;
+	}
+	int result = 0;
+	int power = 1;
+	for (auto itr = str.rbegin(); itr != str.rend(); ++itr) {
+		char c = *itr;
+		int i = c - ASCII_OFFSET;
+		result += (i * power);
+		power *= 10;
+	}
+	return result;
+}
+
+// process input and return result
+int readLines(string& fileName) {
 	ifstream ifs(fileName);
 	if (!ifs) {
 		cerr << "Error reading file" << endl;
@@ -69,14 +121,11 @@ void readLines(string& fileName) {
 	string line;
 	vector<string> grid;
 	
-	// TODO: rather than scan for symbols and then
-	// find adjacent nums; try scanning for nums,
-	// then finding any adjacent symbols. If symbol,
-	// convert string num to int and add to runningSum
-	
 	set< pair<int, int> > symCoords;	// coordinates of symbols
 	set< pair<int, int> > numCoords;	// coordinates of numbers
+	set< pair<int, int> > visited;		// coordinates already scanned for digits
 	int j = 0;	// row index
+	int result = 0;
 	
 	// save input lines into grid
 	// save symbol and number coordinates
@@ -99,44 +148,28 @@ void readLines(string& fileName) {
 		
 		++j; // next row
 	}
-	for (string str : grid) {
-		cout << str << endl;
-	}
 	
-//	cout << endl;
-//	cout << "symbols:" << endl;
-//	for (auto itr = symCoords.begin(); itr != symCoords.end(); ++itr) {
-//		pair<int, int> p = *itr;
-//		cout << p.first << ", " << p.second << endl;
-//	}
-//	cout << endl;
-//	cout << "numbers:" << endl;
-//	if (numCoords.empty()) {
-//		cout << "Numbers is empty!" << endl;
-//	}
-//	for (auto itr = numCoords.begin(); itr != numCoords.end(); ++itr) {
-//		pair<int, int> p = *itr;
-//		cout << p.first << ", " << p.second << endl;
-//	}
-
-	// check each symbol for adj numbers
-	cout << "symbols w/ digit neighbors:" << endl;
+	// check each symbol
 	for (auto itr = symCoords.begin(); itr != symCoords.end(); ++itr) {
 		pair<int, int> p = *itr;
-		if (hasDigitNeighbor(p, numCoords)) {
-			cout << p.first << ", " << p.second << endl;
-			// TODO:
-			// - get number string from numCoords
-			// - remove visited coords from numCoords
-			// - convert number string to int
-			// - add to running sum
-			// - return running sum
+		// get all adjacent digits for this symbol
+		vector< pair<int, int> > v = getDigitNeighbors(p, numCoords);
+		if (!v.empty()) {
+			// check each digit
+			for (auto itr = v.begin(); itr != v.end(); ++itr) {
+				pair<int, int> p = *itr;
+				// get number this digit belongs to
+				string numStr = getNum(p, grid, visited);
+				// add to result
+				result += strToInt(numStr);
+			}
 		}
 	}
+	return result;
 }
 
 
 int main(int argc, char *argv[]) {
 	string fileName = argv[1];
-	readLines(fileName);
+	cout << readLines(fileName) << endl;
 }
