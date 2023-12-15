@@ -17,20 +17,15 @@ void trimWhitespace(string& str) {
 }
 
 // given a vector of target cards and a set of my cards,
-// return the score of this round
-int processRound(vector<string>& targets, unordered_set&<string> myCards) {
+// return the number of matches common to the two
+int processRound(vector<string>& targets, unordered_set<string>& myCards) {
 	int score = 0;
 	
 	// search for each target
 	for (auto itr = targets.begin(); itr != targets.end(); ++itr) {
 		string thisCard = *itr;
 		if (myCards.count(thisCard)) {	// a match!
-			// first match is worth one point
-			if (score == 0) {
-				score++;
-			} else {	// otherwise, score doubles
-				score *= 2;
-			}
+			++score;
 		}
 	}
 	
@@ -45,7 +40,11 @@ int readLines(string& fileName) {
 		return -1;
 	}
 	
-	int totalScore = 0;
+	int totalCopies = 0;
+	int curLine = 1;		// line index
+	int lastCopyLine = 1;	// line with last bonus copy
+	
+	map<int, int> numCopies({ {1, 1} });
 	
 	string line;
 	
@@ -53,6 +52,11 @@ int readLines(string& fileName) {
 		getline(ifs, line);
 		istringstream iss(line);
 		string temp;
+		
+		// done when we've read past last line with copies
+		if (curLine > lastCopyLine) {
+			return totalCopies;
+		}
 		
 		// read "Card <n>:"
 		for (int i = 0; i < 2; ++i) {
@@ -80,13 +84,25 @@ int readLines(string& fileName) {
 		}
 		
 		// process score for this round
-		int roundScore = processRound(targetCards, myCards);
+		int numMatches = processRound(targetCards, myCards);
 		
-		// add to total
-		totalScore += roundScore;
+		// update last line that received copies
+		lastCopyLine = curLine + numMatches;
+		
+		// update copy counts for the next <numMatches> lines
+		for (int i = 1; i <= numMatches; ++i) {
+			numCopies[curLine + i] += numCopies[curLine];
+		}
+		
+		// add this line's copies to total
+		totalCopies += numCopies[curLine];
+		
+		cout << "Line " << curLine << " copies: " << numCopies[curLine] << endl;
+		
+		++curLine;
 	}
 	
-	return totalScore;
+	return totalCopies;
 }
 
 
