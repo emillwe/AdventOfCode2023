@@ -40,11 +40,10 @@ int readLines(string& fileName) {
 		return -1;
 	}
 	
-	int totalCopies = 0;
+	int totalCopies = 0;	// total number of cards
 	int curLine = 1;		// line index
-	int lastCopyLine = 1;	// line with last bonus copy
 	
-	map<int, int> numCopies({ {1, 1} });
+	map<int, int> numCopies({ {1, 0} });
 	
 	string line;
 	
@@ -53,10 +52,7 @@ int readLines(string& fileName) {
 		istringstream iss(line);
 		string temp;
 		
-		// done when we've read past last line with copies
-		if (curLine > lastCopyLine) {
-			return totalCopies;
-		}
+		cout << "ROUND: " << curLine << endl;
 		
 		// read "Card <n>:"
 		for (int i = 0; i < 2; ++i) {
@@ -86,19 +82,17 @@ int readLines(string& fileName) {
 		// process score for this round
 		int numMatches = processRound(targetCards, myCards);
 		
-		// update last line that received copies
-		lastCopyLine = curLine + numMatches;
+		// each line has at least one copy
+		++numCopies[curLine];
 		
 		// update copy counts for the next <numMatches> lines
 		for (int i = 1; i <= numMatches; ++i) {
 			numCopies[curLine + i] += numCopies[curLine];
 		}
 		
-		// add this line's copies to total
+		// add all copies of this card to total
 		totalCopies += numCopies[curLine];
-		
-		cout << "Line " << curLine << " copies: " << numCopies[curLine] << endl;
-		
+				
 		++curLine;
 	}
 	
