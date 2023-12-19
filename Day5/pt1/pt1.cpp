@@ -9,6 +9,15 @@ using namespace std;
 
 const int ASCII_OFFSET = '0';	// char <--> int conversions
 
+// print contents of a map to std::cout
+void printMap(map<int, int>& m) {
+	for (auto itr = m.begin(); itr != m.end(); ++itr) {
+		pair<int, int> p = *itr;
+		cout << p.first << ": " << p.second << endl;
+	}
+	cout << endl;
+}
+
 // convert string num to int
 int stringToInt(string& str) {
 	int result = 0;
@@ -104,35 +113,29 @@ void readLines(string fileName) {
 		"humidity-to-location map:"
 	};
 	
-	// fencepost: find 
+	// fencepost: find "seed-to-soil map"
 	while(!mapNames.count(buf)) {
 		getline(ifs, buf);
-		cout << buf << endl;
 	}
-
-//	// init all maps
-//	for (int i = 0; i < maps.size(); ++i) {
-//		// read until map title
-//		while(!mapNames.count(buf) && !buf.empty()) {
-//			getline(ifs, buf);
-//			cout << buf << endl;
-//		}
-//	}
+//	getline(ifs, buf);
 	
-
-//	// save seed to soil conversions
-//	while (!buf.empty()) {	
-//		getline(ifs, buf);
-////		cout << buf << endl;
-//		initMap(seedToSoil, buf);
-//	}
-//	
-//	// save soil to fertilizer conversions
-//	while (!buf.empty()) {	
-//		getline(ifs, buf);
-////		cout << buf << endl;
-//		initMap(seedToSoil, buf);
-//	}
+	// init all maps
+	for (int i = 0; i < maps.size(); ++i) {
+		// read until next map name
+		while(!mapNames.count(buf)) {
+			getline(ifs, buf);
+		}
+		
+		// read until next empty line; init map
+		while(!buf.empty() && !ifs.eof()) {
+			getline(ifs, buf);
+			initMap(maps[i], buf);
+		}
+		
+		// test map
+		cout << "Map " << i + 1 << endl;
+		printMap(maps[i]);
+	}
 	
 	return;	
 }
