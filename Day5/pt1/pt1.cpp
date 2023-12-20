@@ -54,13 +54,13 @@ void initMap(map<int, int>& m, string str) {
 }
 
 // read and process lines of input
-void readLines(string fileName) {
+int readLines(string fileName) {
 	// open file
 	ifstream ifs(fileName);
 	
 	if(!ifs) {
 		cerr << "Error reading file!" << endl;
-		return;
+		return -1;
 	}
 	
 	string buf;		// buffer
@@ -137,13 +137,45 @@ void readLines(string fileName) {
 		printMap(maps[i]);
 	}
 	
-	return;	
+	// find the lowest location number that corresponds to any of the initial seeds
+	int minLoc = INT_MAX;
+	int input;
+	for (int i = 0; i < seeds.size(); ++i) {
+		input = stringToInt(seeds[i]);
+		cout << "Seed: " << input << endl;
+		
+		// convert through each medium in maps
+		for (int j = 0; j < maps.size(); ++j) {
+			map<int, int>* thisMap = &maps[i];
+			
+			// translate if this value has a conversion
+			if (thisMap->count(input)) {
+				input = (*thisMap)[input];
+			} else {
+				cout << "Not mapped in conversion " << j + 1 << endl;
+			}
+			// otherwise, input value stays the same
+			
+			cout << "next: " << input << endl;
+			
+		}
+		// done converting: input is location
+		cout << "Last: " << input << endl;
+		
+		// track min location
+		if (input < minLoc) {
+			cout << "New min: " << input << endl;
+			minLoc = input;
+		}
+	}	
+	
+	return minLoc;	
 }
 
 
 
 
 int main(int argc, char* argv[]) {
-	readLines(argv[1]);
+	cout << readLines(argv[1]) << endl;
 	return 0;
 }
