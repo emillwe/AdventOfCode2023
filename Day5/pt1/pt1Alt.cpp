@@ -11,6 +11,8 @@ const int ASCII_OFFSET = '0';	// char <--> int conversions
 
 // model conversions between media
 struct conversion {
+	vector< tuple<int> > data;
+	
 	int destination;
 	int source;
 	int range;
@@ -149,14 +151,14 @@ int readLines(string fileName) {
 		
 		// convert through each medium in maps
 		for (int j = 0; j < maps.size(); ++j) {
-			conv thisConv = &(maps[j]);
+			conversion *thisConv = &(maps[j]);
 			
 			// translate if this value has a conversion
 			// TODO: refactor for conversion struct
-			int count = thisMap->count(input);
-			if (thisMap->count(input)) {
-				input = (*thisMap)[input];
-			} // otherwise, input value stays the same
+//			int count = thisMap->count(input);
+//			if (thisMap->count(input)) {
+//				input = (*thisMap)[input];
+//			} // otherwise, input value stays the same
 			
 			cout << "next: " << input << endl;
 			
