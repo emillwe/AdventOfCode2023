@@ -9,12 +9,16 @@ using namespace std;
 
 const int ASCII_OFFSET = '0';	// char <--> int conversions
 
-// print contents of a map to std::cout
-void printMap(map<int, int>& m) {
-	for (auto itr = m.begin(); itr != m.end(); ++itr) {
-		pair<int, int> p = *itr;
-		cout << p.first << ": " << p.second << endl;
-	}
+// model conversions between media
+struct conversion {
+	int destination;
+	int source;
+	int range;
+};
+
+// TODO: expand for all intermediate values
+void printConv(conversion& conv) {
+	cout << conv.destination << " " << conv.source << " " << conv.range;
 	cout << endl;
 }
 
@@ -33,8 +37,8 @@ int stringToInt(string& str) {
 	return result;
 }
 
-// given a map and string of values, initialize map
-void initMap(map<int, int>& m, string str) {
+// given a conversion and string of values, initialize map
+void initMap(conversion& conv, string str) {
 	istringstream iss(str);
 	string buf1, buf2, buf3;
 
@@ -46,11 +50,9 @@ void initMap(map<int, int>& m, string str) {
 	int sStart = stringToInt(buf2);		// source start
 	int rangeLen = stringToInt(buf3);	// range length
 	
-	for (int i = 0; i < rangeLen; ++i) {
-		m[sStart] = dStart;
-		++sStart;
-		++dStart;
-	}
+	conv.destination = dStart;
+	conv.source = sStart;
+	conv.range = rangeLen;
 }
 
 // read and process lines of input
@@ -85,15 +87,15 @@ int readLines(string fileName) {
 	getline(ifs, buf);
 	
 	// conversion maps
-	map<int, int> seedToSoil;
-	map<int, int> soilToFert;
-	map<int, int> fertToWater;
-	map<int, int> waterToLight;
-	map<int, int> lightToTemp;
-	map<int, int> tempToHumid;
-	map<int, int> humidToLoc;
+	conversion seedToSoil;
+	conversion soilToFert;
+	conversion fertToWater;
+	conversion waterToLight;
+	conversion lightToTemp;
+	conversion tempToHumid;
+	conversion humidToLoc;
 	
-	vector< map<int, int> > maps = {
+	vector<conversion> maps = {
 		seedToSoil,
 		soilToFert,
 		fertToWater,
@@ -129,12 +131,13 @@ int readLines(string fileName) {
 		// read until next empty line; init map
 		while(!buf.empty() && !ifs.eof()) {
 			getline(ifs, buf);
-			initMap(maps[i], buf);
+			// TODO: replace with initConv
+//			initMap(maps[i], buf);
 		}
 		
 		// test map
 		cout << "Map " << i + 1 << endl;
-		printMap(maps[i]);
+		printConv(maps[i]);
 	}
 	
 	// find the lowest location number that corresponds to any of the initial seeds
@@ -146,9 +149,10 @@ int readLines(string fileName) {
 		
 		// convert through each medium in maps
 		for (int j = 0; j < maps.size(); ++j) {
-			map<int, int>* thisMap = &(maps[j]);
+			conv thisConv = &(maps[j]);
 			
 			// translate if this value has a conversion
+			// TODO: refactor for conversion struct
 			int count = thisMap->count(input);
 			if (thisMap->count(input)) {
 				input = (*thisMap)[input];
