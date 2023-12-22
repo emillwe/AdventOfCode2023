@@ -146,25 +146,24 @@ int readLines(string fileName) {
 		
 		// convert through each medium in maps
 		for (int j = 0; j < maps.size(); ++j) {
-			map<int, int>* thisMap = &maps[i];
+			map<int, int>* thisMap = &(maps[j]);
 			
 			// translate if this value has a conversion
+			int count = thisMap->count(input);
 			if (thisMap->count(input)) {
 				input = (*thisMap)[input];
-			} else {
-				cout << "Not mapped in conversion " << j + 1 << endl;
-			}
-			// otherwise, input value stays the same
+			} // otherwise, input value stays the same
 			
 			cout << "next: " << input << endl;
 			
 		}
+		cout << "\n";
 		// done converting: input is location
-		cout << "Last: " << input << endl;
 		
 		// track min location
 		if (input < minLoc) {
 			cout << "New min: " << input << endl;
+			cout << endl;
 			minLoc = input;
 		}
 	}	
