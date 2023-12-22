@@ -10,9 +10,9 @@ using namespace std;
 const int ASCII_OFFSET = '0';	// char <--> int conversions
 
 // convert string num to int
-int stringToInt(string& str) {
+unsigned long stringToInt(string& str) {
 	unsigned long result = 0;
-	int mult = 1;
+	unsigned long mult = 1;
 	
 	for (auto itr = str.rbegin(); itr != str.rend(); ++itr) {
 		char c = *itr;
@@ -31,7 +31,7 @@ struct conversion {
 	void init(string& str) {
 		istringstream iss(str);
 		string next;
-		vector<long> values;
+		vector<unsigned long> values;
 		
 		// convert all strings to ints
 		while(iss >> next) {
@@ -42,7 +42,7 @@ struct conversion {
 		data.push_back(make_tuple(values[0], values[1], values[2]));
 	}
 	
-	int processInput(long input) {
+	unsigned long processInput(unsigned long input) {
 		for (auto itr = data.begin(); itr != data.end(); ++itr) {
 			auto t = *itr;
 			unsigned long dStart = get<0>(t);
@@ -88,7 +88,7 @@ bool testConv(conversion& conv, long input, long target) {
 }
 
 // read and process lines of input
-long readLines(string fileName) {
+unsigned long readLines(string fileName) {
 	// open file
 	ifstream ifs(fileName);
 	

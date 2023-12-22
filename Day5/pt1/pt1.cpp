@@ -20,8 +20,8 @@ void printMap(map<int, int>& m) {
 
 // convert string num to int
 int stringToInt(string& str) {
-	int result = 0;
-	int mult = 1;
+	unsigned long result = 0;
+	unsigned long mult = 1;
 	
 	for (auto itr = str.rbegin(); itr != str.rend(); ++itr) {
 		char c = *itr;
