@@ -9,19 +9,10 @@ using namespace std;
 
 const int ASCII_OFFSET = '0';	// char <--> int conversions
 
-// print contents of a map to std::cout
-void printMap(map<int, int>& m) {
-	for (auto itr = m.begin(); itr != m.end(); ++itr) {
-		pair<int, int> p = *itr;
-		cout << p.first << ": " << p.second << endl;
-	}
-	cout << endl;
-}
-
 // convert string num to int
-int stringToInt(string& str) {
-	int result = 0;
-	int mult = 1;
+unsigned long stringToInt(string& str) {
+	unsigned long result = 0;
+	unsigned long mult = 1;
 	
 	for (auto itr = str.rbegin(); itr != str.rend(); ++itr) {
 		char c = *itr;
@@ -33,28 +24,71 @@ int stringToInt(string& str) {
 	return result;
 }
 
-// given a map and string of values, initialize map
-void initMap(map<int, int>& m, string str) {
-	istringstream iss(str);
-	string buf1, buf2, buf3;
-
-	iss >> buf1;
-	iss >> buf2;
-	iss >> buf3;
+// model conversions between media
+struct conversion {
+	vector< tuple<unsigned long, unsigned long, unsigned long> > data;
 	
-	int dStart = stringToInt(buf1);		// destination start
-	int sStart = stringToInt(buf2);		// source start
-	int rangeLen = stringToInt(buf3);	// range length
-	
-	for (int i = 0; i < rangeLen; ++i) {
-		m[sStart] = dStart;
-		++sStart;
-		++dStart;
+	void init(string& str) {
+		istringstream iss(str);
+		string next;
+		vector<unsigned long> values;
+		
+		// convert all strings to ints
+		while(iss >> next) {
+			values.push_back(stringToInt(next));
+		}
+		
+		// save values in conversion
+		data.push_back(make_tuple(values[0], values[1], values[2]));
 	}
+	
+	unsigned long processInput(unsigned long input) {
+		for (auto itr = data.begin(); itr != data.end(); ++itr) {
+			auto t = *itr;
+			unsigned long dStart = get<0>(t);
+			unsigned long sStart = get<1>(t);
+			unsigned long range = get<2>(t);
+			
+			// is this the right range for input?
+			if (input < sStart) {
+				continue;
+			}
+			
+			unsigned long offset = input - sStart;
+			unsigned long output = dStart + offset;
+			
+			// is output in range?
+			if (output >= dStart + range) {
+				continue;
+			} else { // input is in this range
+				return output;
+			}
+		}
+		
+		// range not found: input maps to itself
+		return input;
+	}
+	
+	// TODO: expand for all intermediate values ?
+	void print() {
+		for (auto itr = data.begin(); itr != data.end(); ++itr) {
+			auto t = *itr;
+			
+			unsigned long dStart = get<0>(t);
+			unsigned long sStart = get<1>(t);
+			unsigned long range = get<2>(t);
+			
+			cout << dStart << " " << sStart << " " << range << endl;
+		}
+	}
+};
+
+bool testConv(conversion& conv, long input, long target) {
+	return conv.processInput(input) == target;
 }
 
 // read and process lines of input
-int readLines(string fileName) {
+unsigned long readLines(string fileName) {
 	// open file
 	ifstream ifs(fileName);
 	
@@ -80,20 +114,16 @@ int readLines(string fileName) {
 		seeds.push_back(thisSeed);
 	}
 	
-	// buf == "seeds:"
-	getline(ifs, buf);
-	getline(ifs, buf);
-	
 	// conversion maps
-	map<int, int> seedToSoil;
-	map<int, int> soilToFert;
-	map<int, int> fertToWater;
-	map<int, int> waterToLight;
-	map<int, int> lightToTemp;
-	map<int, int> tempToHumid;
-	map<int, int> humidToLoc;
+	conversion seedToSoil;
+	conversion soilToFert;
+	conversion fertToWater;
+	conversion waterToLight;
+	conversion lightToTemp;
+	conversion tempToHumid;
+	conversion humidToLoc;
 	
-	vector< map<int, int> > maps = {
+	vector<conversion> maps = {
 		seedToSoil,
 		soilToFert,
 		fertToWater,
@@ -113,46 +143,38 @@ int readLines(string fileName) {
 		"humidity-to-location map:"
 	};
 	
-	// fencepost: find "seed-to-soil map"
-	while(!mapNames.count(buf)) {
-		getline(ifs, buf);
-	}
-//	getline(ifs, buf);
-	
 	// init all maps
 	for (int i = 0; i < maps.size(); ++i) {
-		// read until next map name
-		while(!mapNames.count(buf)) {
+		while(!mapNames.count(buf) && !ifs.eof()) {
 			getline(ifs, buf);
-		}
+			cout << buf << endl;
+		} // buf now contains a map name
 		
-		// read until next empty line; init map
 		while(!buf.empty() && !ifs.eof()) {
 			getline(ifs, buf);
-			initMap(maps[i], buf);
+			if (!buf.empty()) {
+				cout << "initializing: " << buf << endl;
+				maps[i].init(buf);
+			}
 		}
 		
 		// test map
-		cout << "Map " << i + 1 << endl;
-		printMap(maps[i]);
+		maps[i].print();
+		cout << endl;
 	}
 	
 	// find the lowest location number that corresponds to any of the initial seeds
-	int minLoc = INT_MAX;
-	int input;
+	unsigned long minLoc = INT_MAX;
+	unsigned long input;
 	for (int i = 0; i < seeds.size(); ++i) {
 		input = stringToInt(seeds[i]);
 		cout << "Seed: " << input << endl;
 		
 		// convert through each medium in maps
 		for (int j = 0; j < maps.size(); ++j) {
-			map<int, int>* thisMap = &(maps[j]);
-			
-			// translate if this value has a conversion
-			int count = thisMap->count(input);
-			if (thisMap->count(input)) {
-				input = (*thisMap)[input];
-			} // otherwise, input value stays the same
+			conversion *thisConv = &(maps[j]);
+
+			input = thisConv->processInput(input);
 			
 			cout << "next: " << input << endl;
 			
@@ -168,13 +190,35 @@ int readLines(string fileName) {
 		}
 	}	
 	
-	return minLoc;	
+	return minLoc;
 }
 
-
-
+void test() {
+	conversion conv;
+	
+	string input = "0 15 37";
+	string input2 = "37 52 2";
+	string input3 = "39 0 15";
+	
+	conv.init(input);
+	conv.init(input2);
+	conv.init(input3);
+	conv.print();
+	cout << endl;
+	
+	bool pass1 = testConv(conv, 81, 81);
+	bool pass2 = testConv(conv, 14, 53);
+	bool pass3 = testConv(conv, 57, 57);
+	bool pass4 = testConv(conv, 13, 52);
+	
+	if(pass4) {
+		cout << "success!" << endl;
+	} else {
+		cout << "Failure!" << endl;
+	}
+}
 
 int main(int argc, char* argv[]) {
-	cout << readLines(argv[1]) << endl;
+	cout << "Min location: " << readLines(argv[1]) << endl;
 	return 0;
 }
