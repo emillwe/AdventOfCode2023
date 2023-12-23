@@ -2,8 +2,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <map>
 #include <set>
+#include <tuple>
 
 using namespace std;
 
@@ -50,15 +50,15 @@ struct conversion {
 			unsigned long range = get<2>(t);
 			
 			// is this the right range for input?
-			if (input < sStart) {
+			if (input < dStart) {
 				continue;
 			}
 			
-			unsigned long offset = input - sStart;
-			unsigned long output = dStart + offset;
+			unsigned long offset = input - dStart;
+			unsigned long output = sStart + offset;
 			
 			// is output in range?
-			if (output >= dStart + range) {
+			if (output >= sStart + range) {
 				continue;
 			} else { // input is in this range
 				return output;
@@ -147,50 +147,45 @@ unsigned long readLines(string fileName) {
 	for (int i = 0; i < maps.size(); ++i) {
 		while(!mapNames.count(buf) && !ifs.eof()) {
 			getline(ifs, buf);
-			cout << buf << endl;
 		} // buf now contains a map name
 		
 		while(!buf.empty() && !ifs.eof()) {
 			getline(ifs, buf);
 			if (!buf.empty()) {
-				cout << "initializing: " << buf << endl;
 				maps[i].init(buf);
 			}
 		}
-		
-		// test map
-		maps[i].print();
-		cout << endl;
 	}
 	
 	// find the lowest location number that corresponds to any of the initial seeds
 	unsigned long minLoc = INT_MAX;
 	unsigned long input;
-	for (int i = 0; i < seeds.size(); ++i) {
-		input = stringToInt(seeds[i]);
-		cout << "Seed: " << input << endl;
+	unsigned long i;
+	// test all possible location values
+	for (i = 0; i < INT_MAX; ++i) {
+		// convert through each medium in maps (backwards)
+		input = i;
+		cout << "input: " << input << endl;
 		
-		// convert through each medium in maps
-		for (int j = 0; j < maps.size(); ++j) {
-			conversion *thisConv = &(maps[j]);
-
-			input = thisConv->processInput(input);
-			
+		// test this seed
+		for (auto itr = maps.rbegin(); itr != maps.rend(); ++itr) {
+			conversion thisConv = *itr;
+			input = thisConv.processInput(input);
 			cout << "next: " << input << endl;
-			
 		}
-		cout << "\n";
-		// done converting: input is location
+		// done converting: input is a seed
 		
-		// track min location
-		if (input < minLoc) {
-			cout << "New min: " << input << endl;
-			cout << endl;
-			minLoc = input;
+		// check if result is a valid seed
+		for (unsigned long j = 0; j < seeds.size(); ++j) {
+			unsigned long seedStart = stringToInt(seeds[j]);
+			unsigned long seedRange = stringToInt(seeds[j+1]);
+			
+			if (input >= seedStart && input < (seedStart + seedRange)) {
+				return i;
+			}
 		}
-	}	
-	
-	return minLoc;
+	}
+	return i;
 }
 
 void test() {
