@@ -24,10 +24,62 @@ unsigned long stringToInt(string& str) {
 	return result;
 }
 
+// model range of seeds
+struct seedRange {
+	unsigned long start;
+	unsigned long range;
+};
+
+// model collection of seed ranges
+struct seedGroup {
+	vector<seedRange> seedRanges;
+	
+	// track min and max seed values in group
+	unsigned long minSeed = 0;
+	unsigned long maxSeed = INT_MAX;
+	
+	// initialize a seed group from a vector comprising strings
+	// <seedStart1>, <seedRange1>, <seedStart2>, . . . <seedRangeN>
+	void init(vector<string>& seeds) {
+		for (int i = 0; i < seeds.size(); i += 2) {
+			seedRange sRange;
+			sRange.start = stringToInt(seeds[i]);
+			sRange.range = stringToInt(seeds[i+1]);
+			
+			seedRanges.push_back(sRange);
+			
+			// update limits
+			minSeed = min(minSeed, sRange.start);
+			maxSeed = max(maxSeed, sRange.start + sRange.range - 1);
+		}
+	}
+	
+	// check if a given seed falls within this seed group
+	bool isGoodSeed(unsigned long& thisSeed) {
+		for (auto s : seedRanges) {
+			// is this seed within bounds of this range?
+			bool inRange = (
+				thisSeed >= s.start &&
+				thisSeed < (s.start + s.range)
+			);
+			if (!inRange) {
+				continue;
+			} else {
+				return inRange;
+			}
+		}
+		return false;
+	}
+};
+
 // model conversions between media
 struct conversion {
+	// lists of map specs (destination, source, range)
+	// Each element is a specifies a conversion range
 	vector< tuple<unsigned long, unsigned long, unsigned long> > data;
 	
+	// given a line (str) of seed specs, read into data
+	// as a single range
 	void init(string& str) {
 		istringstream iss(str);
 		string next;
@@ -38,10 +90,12 @@ struct conversion {
 			values.push_back(stringToInt(next));
 		}
 		
-		// save values in conversion
+		// save values in this conversion range
 		data.push_back(make_tuple(values[0], values[1], values[2]));
 	}
 	
+	// convert input value through this medium, testing each range
+	// unmapped inputs are unchanged
 	unsigned long processInput(unsigned long input) {
 		for (auto itr = data.begin(); itr != data.end(); ++itr) {
 			auto t = *itr;
@@ -83,11 +137,12 @@ struct conversion {
 	}
 };
 
+// given this conversion, test  if this input matches this target
 bool testConv(conversion& conv, long input, long target) {
 	return conv.processInput(input) == target;
 }
 
-// read and process lines of input
+// parse input, return solution
 unsigned long readLines(string fileName) {
 	// open file
 	ifstream ifs(fileName);
@@ -102,17 +157,26 @@ unsigned long readLines(string fileName) {
 	// read "seeds:"
 	ifs >> buf;
 	
-	// save line of seeds
+	// save line of seed ranges
 	string seedStr;
 	getline(ifs, seedStr);
 	
-	// save each seed
+	// save each seed range
 	istringstream iss(seedStr);
 	vector<string> seeds;
 	string thisSeed;
 	while (iss >> thisSeed) {
 		seeds.push_back(thisSeed);
 	}
+	
+	// init seed group
+	seedGroup sg;
+	sg.init(seeds);
+	
+//	cout << "Seed ranges: " << endl;
+//	for (auto itr = seeds.begin(); itr != seeds.end(); itr += 2) {
+//		cout << *itr << ", " << *(itr + 1) <<endl;
+//	}
 	
 	// conversion maps
 	conversion seedToSoil;
@@ -152,6 +216,7 @@ unsigned long readLines(string fileName) {
 		while(!buf.empty() && !ifs.eof()) {
 			getline(ifs, buf);
 			if (!buf.empty()) {
+				// initialize this map
 				maps[i].init(buf);
 			}
 		}
@@ -161,6 +226,7 @@ unsigned long readLines(string fileName) {
 	unsigned long minLoc = INT_MAX;
 	unsigned long input;
 	unsigned long i;
+	
 	// test all possible location values
 	for (i = 0; i < INT_MAX; ++i) {
 		// convert through each medium in maps (backwards)
@@ -176,16 +242,26 @@ unsigned long readLines(string fileName) {
 		// done converting: input is a seed
 		
 		// check if result is a valid seed
-		for (unsigned long j = 0; j < seeds.size(); ++j) {
-			unsigned long seedStart = stringToInt(seeds[j]);
-			unsigned long seedRange = stringToInt(seeds[j+1]);
-			
-			if (input >= seedStart && input < (seedStart + seedRange)) {
-				return i;
-			}
+//		for (unsigned long j = 0; j < seeds.size(); j += 2) {
+//			unsigned long seedStart = stringToInt(seeds[j]);
+//			unsigned long seedRange = stringToInt(seeds[j+1]);
+//			
+//			if (input >= seedStart && input < (seedStart + seedRange)) {
+//				return i;
+//			}
+//		}
+		
+		// can we skip this seed?
+		if (input < sg.minSeed || input > sg.maxSeed) {
+			continue;
+		}
+		
+		// need to check seed
+		if (sg.isGoodSeed(input)) {
+			return i;
 		}
 	}
-	return i;
+	return -1;
 }
 
 void test() {
