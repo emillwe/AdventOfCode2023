@@ -231,13 +231,13 @@ unsigned long readLines(string fileName) {
 	for (i = 0; i < INT_MAX; ++i) {
 		// convert through each medium in maps (backwards)
 		input = i;
-		cout << "input: " << input << endl;
+//		cout << "input: " << input << endl;
 		
 		// test this seed
 		for (auto itr = maps.rbegin(); itr != maps.rend(); ++itr) {
 			conversion thisConv = *itr;
 			input = thisConv.processInput(input);
-			cout << "next: " << input << endl;
+//			cout << "next: " << input << endl;
 		}
 		// done converting: input is a seed
 		
