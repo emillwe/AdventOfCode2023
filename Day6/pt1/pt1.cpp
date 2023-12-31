@@ -49,6 +49,49 @@ struct heat {
 	}
 };
 
+int processHeats(vector<heat>& heats, bool print = false) {
+	int result = 1;		// running product
+	
+	// for each heat, get all charge times greater than
+	// target distance and mult with result
+	for (auto heat : heats) {
+		int numWins = 0;	// number of winning chargeTimes
+		
+		// check all possible charge times
+		if (print) {
+			cout << "Heat: " << endl;
+			cout << "time: " << heat.time << " dist: " << heat.distance << endl;
+		}
+		
+		for (int chargeTime = 1; chargeTime < heat.time; ++chargeTime) {
+			// get distance travelled for this charge time
+			int thisDist = chargeToDist(heat.time, chargeTime);
+			
+			if (print) {
+				cout << "charge: " << chargeTime << " dist: " << thisDist << endl;
+			}
+			
+			// found a winning charge time?
+			if (thisDist > heat.distance) {
+				if (print) {
+					cout << "winner!" << endl;
+				}
+				++numWins;
+				if (print) {
+					cout << "# of wins: " << numWins << endl;
+				}
+			}
+		}
+		
+		result *= numWins;
+		if (print) {
+			cout << "result: " << result << endl;
+		}
+	}
+	
+	return result;
+}
+
 // parse input, return solution
 int readLines(string fileName) {
 	ifstream ifs(fileName);
@@ -78,20 +121,18 @@ int readLines(string fileName) {
 	
 	// save heat data
 	for (int i = 0; i < times.size(); ++i) {
-		cout << "Heat: " << i + 1 << endl;
+//		cout << "Heat: " << i + 1 << endl;
 		heat thisHeat(times[i], distances[i]);
 		heats.push_back(thisHeat);
-		thisHeat.print();
-		cout << endl;
+//		thisHeat.print();
+//		cout << endl;
 	}
-	
-	
-	
-	
-	return 0;
+		
+	return processHeats(heats, false);
 }
 
 int main(int argc, char* argv[]) {
-	readLines(argv[1]);
+//	cout << readLines(argv[1]) << endl;
+	cout << readLines(argv[1]) << endl;
 	return 0;
 }
